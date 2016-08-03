@@ -65,7 +65,7 @@ public class Send{
 		for(j=1;j<=i;j++) {	
 			System.out.println("상대방의"+j+"번째 메일을 입력해주세요.:");
 			addressee=scan.next().trim();
-		}
+		
 			InternetAddress addr = new InternetAddress(sender);			// 발신자 수신
 			message.setFrom(addr);							
 			message.addRecipient(Message.RecipientType.TO,new InternetAddress(addressee));	//메일전송
@@ -81,7 +81,7 @@ public class Send{
 			psmt.setString(4, content);					
 			psmt.executeUpdate();
 			psmt.clearParameters();					// 클리어 
-			
+		}	
 			System.out.println("전송성공!");	
 			}
 			catch(Exception e){
