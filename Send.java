@@ -3,6 +3,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
 import java.util.Scanner;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -10,61 +15,79 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-public class Send {
-			
-	public static void main(String[] args) {
-					
-			try {
-					
-					int i,k,j;   						// ¸ŞÀÏº¸³¾°¹¼ö º¯¼ö
-					String myemail,title,content; 		//ÀÚ½ÅÀÇ ¸ŞÀÏÁÖ¼Ò	,»ó´ë¹æÀÇ ¸ŞÀÏÁÖ¼Ò,¸ŞÀÏ Á¦¸ñ,¸ŞÀÏ ³»¿ë
-					String opponentmail = null;
+import javax.mail.internet.MimeUtility;
 
-					Properties props = new Properties();
-		    		props.put("mail.transpot.protocol;","smtp"); 			//ÇÁ·ÎÅäÄİ ¼³Á¤
-		    		props.put("mail.smtp.host","223.130.121.106");		//smtpÁÖ¼Ò ( ¸®´ª½º ÁÖ¼Ò )
-		    		props.put("mail.smtp.port","25");						//Æ÷Æ®¼³Á¤					
-					Session mailma = Session.getInstance(props); 	// ¸ŞÀÏ ¼¼¼ÇÀ» ¸¸µé°í ºó ¸Ş½ÃÁö¸¦ ¸¸µç´Ù
-					Message message = new MimeMessage(mailma); // 		mailsen ¸ŞÀÏ ¹ß¼Û		
-					Class.forName("org.gjt.mm.mysql.Driver");			//DBµå¶óÀÌ¹ö ¿Í ÀÚ¹Ù ·Îµù
-					System.out.println("DB¿¡ Driver ·Îµù¼º°ø"); 
-					//Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/", "en8", "ansanwls1#");				//DB¿Í¸®´ª½º ¿¬°á
-					Scanner scan = new Scanner(System.in);                  
-			        System.out.print("ÀÚ½ÅÀÇ e-mailÀ» ÀÔ·ÂÇØÁÖ¼¼¿ä.:");           
-			        myemail = scan.next();
-			        myemail=myemail.trim();
-					System.out.print("¸î¸í¿¡°Ô º¸³»½Ã°Ú½À´Ï±î?");
-			    	i =scan.nextInt();		    	
-			    	System.out.println("Á¦¸ñÀ» ÀÔ·ÂÇØÁÖ¼¼¿ä.:");
-		    		title=scan.next();
-		    		System.out.println("³»¿ëÀ» ÀÔ·ÂÇØÁÖ¼¼¿ä.:");
-		    		content=scan.next();
-		    		
-					 for(j=1;j<=i;j++){ 	
-						 	InternetAddress addr = new InternetAddress(myemail);			// ¸ŞÀÏ º¸³»´Â»ç¶÷ ¼³Á¤
-				        	System.out.println("»ó´ë¹æ¿¡"+j+"¹øÂ° e-mailÀ» ÀÔ·ÂÇØÁÖ¼¼¿ä.:");
-				    		opponentmail=scan.next();
-				    		opponentmail=opponentmail.trim();				    		
-				    		for(int a=1;a<=j;a++){
-				    			message.setFrom(addr);							// ¸ŞÀÏ º¸³»´Â»ç¶÷ ¼³Á¤
-				    			message.addRecipient(Message.RecipientType.TO,new InternetAddress(opponentmail));	// ¸ŞÀÏ¹Ş´Â»ç¶÷¼³Á¤	
-				    			message.setSubject(title); 		// Á¦¸ñ¼³Á¤
-				    			message.setText(content);		// ³»¿ë¼³Á¤
-				    			Transport.send(message);				// ¸ŞÀÏÀ» º¸³¿
-		    		
-				    		}
-				}    			
+public class Send{
+	static Scanner scan = new Scanner(System.in);
+	static String sender,title,content,addressee =null;
+	static int i,j;
 
-			    		
-			    		System.out.println("Àü¼Û¼º°ø");			//@@@@ Àü¼ÛÁß Ãß°¡ ¿¹Á¤ @@@@ + ½Ã°£Ãß°¡
-			    		
-					}
+	
+
+	static class info extends Thread{	
+		
+		public void run() {	
 			
-			catch(Exception e){
-				System.out.println("¿¬°á½ÇÆĞ");
-				
-			}
+			System.out.print("ë°œì‹ ìì˜ ë©”ì¼ì„ ì…ë ¥í•´ì£¼ì„¸ìš”..:");           
+	        sender=scan.next().trim();
+	        System.out.print("ëª‡ëª…ì—ê²Œ ë³´ë‚´ì‹œê² ìŠµë‹ˆê¹Œ?");
+	        while(!scan.hasNextInt()){
+	        scan.next();
+	        System.out.println("ìˆ«ìë¥¼ ì…ë ¥í•´ì£¼ì„¸ìš”!");
+	        }i =scan.nextInt();   											// ë°œì‹ ì,ìˆ˜ì‹ ì ë“± ë©”ì¼ì— ê´€í•œ ì •ë³´ ì…ë ¥ë°›ê¸°    
+	    	System.out.println("ì œëª©ì„ ì…ë ¥í•´ì£¼ì„¸ìš”.:");
+	 		title=scan.next();
+	 		System.out.println("ë‚´ìš©ì„ ì…ë ¥í•´ì£¼ì„¸ìš”.:");
+	 		content=scan.next();	
+		 		
+		}	
+}			
+	
+		public static void main(String[]args){
 			
+			try{
+			info inf = new info();
+			inf.start();
+			inf.join();
+
+			Properties props = new Properties();
+			props.put("mail.transpot.protocol;","smtp"); 			// smtpì„œë²„ ì‚¬ìš©
+			props.put("mail.smtp.host","223.130.121.106");		// 		í˜¸ìŠ¤íŠ¸ ì„¤ì •
+			props.put("mail.smtp.port","25");						//	í¬íŠ¸ì„¤ì • 
+			Session mailma = Session.getInstance(props); 	
+			Message message = new MimeMessage(mailma); // 		mailsen ê°ì²´ìƒì„±
+			
+			Class.forName("org.gjt.mm.mysql.Driver");
+			System.out.println("ë“œë¼ì´ë¸Œ ì—°ê²°ì„±ê³µ");	        	             			            
+			Connection conn = DriverManager.getConnection("jdbc:mysql://223.130.121.106/sendmail","root", "0000");
+			System.out.println("ì„œë²„ ì—°ê²°ì„±ê³µ!"); //     ì„œë²„ ì—°ê²° 
+    
+		for(j=1;j<=i;j++) {	
+			System.out.println("ìƒëŒ€ë°©ì˜"+j+"ë²ˆì§¸ ë©”ì¼ì„ ì…ë ¥í•´ì£¼ì„¸ìš”.:");
+			addressee=scan.next().trim();
 		}
+			InternetAddress addr = new InternetAddress(sender);			// ë°œì‹ ì ìˆ˜ì‹ 
+			message.setFrom(addr);							
+			message.addRecipient(Message.RecipientType.TO,new InternetAddress(addressee));	//ë©”ì¼ì „ì†¡
+			message.setSubject(title); 				// ì œëª©ì„¤ì •
+			message.setText(content);				// ë‚´ìš©ì„¤ì •
+			Transport.send(message);			// 	ë©”ì¼ ë°œì†¡
+											
+			String sql = new String("INSERT INTO mailsave (sender, addressee, title, content) VALUES (?, ?, ?, ?)");
+			PreparedStatement psmt = conn.prepareStatement(sql); 
+			psmt.setString(1, sender);
+			psmt.setString(2, addressee);				// << DBì— ë©”ì¼ë°œì†¡ ì •ë³´ ì €
+			psmt.setString(3, title);
+			psmt.setString(4, content);					
+			psmt.executeUpdate();
+			psmt.clearParameters();					// í´ë¦¬ì–´ 
+			
+			System.out.println("ì „ì†¡ì„±ê³µ!");	
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}				
 				
+}
+	
 }
